@@ -1,0 +1,30 @@
+image: $CI_DOCKER_CACHE/docker:stable
+
+variables:
+  APP_NAME: avr8-toolchain
+  CONTAINER_TEST_IMAGE: $CI_REGISTRY/$APP_NAME:$CI_COMMIT_SHA
+  CONTAINER_RELEASE_IMAGE_BASE: $CI_REGISTRY/$APP_NAME
+
+before_script:
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+
+build-application-image:
+  stage: build
+  script:
+    - >
+        docker build --pull 
+        --build-arg http_proxy=$http_proxy 
+        --build-arg https_proxy=$https_proxy 
+        . 
+        -t $CONTAINER_TEST_IMAGE
+
+push-image:
+  stage: deploy
+  script:
+    - APP_VERSION=$(docker run avr8-toolchain avr-gcc --version | head -n 1 | cut -d\( -f2 | cut -d\) -f1 | cut -d_ -f6-)
+    - echo $APP_NAME Version is $APP_VERSION
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE_BASE:latest 
+    - docker push $CONTAINER_RELEASE_IMAGE_BASE:latest
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE_BASE:$APP_VERSION 
+    - docker push $CONTAINER_RELEASE_IMAGE_BASE:$APP_VERSION
+    
