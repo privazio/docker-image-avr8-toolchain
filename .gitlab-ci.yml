@@ -31,6 +31,7 @@ push-image:
 
 share-image:
   stage: deploy
+  script:
     - APP_VERSION=$(docker run $CONTAINER_TEST_IMAGE avr-gcc --version | head -n 1 | cut -d\( -f2 | cut -d\) -f1 | cut -d_ -f6-)
     - echo Sharing $APP_NAME with Version $APP_VERSION
     - docker login -u "$CI_DOCKER_HUB_USER" -p "$CI_DOCKER_HUB_PASSWORD"
