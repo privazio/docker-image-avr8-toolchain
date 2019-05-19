@@ -4,6 +4,7 @@ variables:
   APP_NAME: avr8-toolchain
   CONTAINER_TEST_IMAGE: $CI_REGISTRY/$APP_NAME:$CI_COMMIT_SHA
   CONTAINER_RELEASE_IMAGE_BASE: $CI_REGISTRY/$APP_NAME
+  CONTAINER_HUB_IMAGE_BASE: $CI_DOCKER_HUB_ORG/$APP_NAME
 
 before_script:
   - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
@@ -27,4 +28,14 @@ push-image:
     - docker push $CONTAINER_RELEASE_IMAGE_BASE:latest
     - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE_BASE:$APP_VERSION 
     - docker push $CONTAINER_RELEASE_IMAGE_BASE:$APP_VERSION
+
+share-image:
+  stage: deploy
+    - APP_VERSION=$(docker run $CONTAINER_TEST_IMAGE avr-gcc --version | head -n 1 | cut -d\( -f2 | cut -d\) -f1 | cut -d_ -f6-)
+    - echo Sharing $APP_NAME with Version $APP_VERSION
+    - docker login -u "$CI_DOCKER_HUB_USER" -p "$CI_DOCKER_HUB_PASSWORD"
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_HUB_IMAGE_BASE:latest 
+    - docker push $CONTAINER_HUB_IMAGE_BASE:latest
+    - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_HUB_IMAGE_BASE:$APP_VERSION 
+    - docker push $CONTAINER_HUB_IMAGE_BASE:$APP_VERSION
     
