@@ -21,7 +21,7 @@ build-application-image:
 push-image:
   stage: deploy
   script:
-    - APP_VERSION=$(docker run avr8-toolchain avr-gcc --version | head -n 1 | cut -d\( -f2 | cut -d\) -f1 | cut -d_ -f6-)
+    - APP_VERSION=$(docker run $CONTAINER_TEST_IMAGE avr-gcc --version | head -n 1 | cut -d\( -f2 | cut -d\) -f1 | cut -d_ -f6-)
     - echo $APP_NAME Version is $APP_VERSION
     - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE_BASE:latest 
     - docker push $CONTAINER_RELEASE_IMAGE_BASE:latest
